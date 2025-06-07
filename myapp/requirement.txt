@@ -1,5 +1,1 @@
-# Application dependencies
-requests
-
-# Security tools
-bandit
+fire==0.4.0
