@@ -5,7 +5,7 @@ pipeline {
             }
       }
     triggers {
-        pollSCM '* * * * *'
+        pollSCM 'H * * * *'
     }
     stages {
         stage('Dependencies Install') {
