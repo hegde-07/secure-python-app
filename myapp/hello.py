@@ -1,7 +1,9 @@
-import fire
+import requests
 
-def hello(name="World"):
-  return "Hello %s!" % name
+def main():
+    print("Hello from Secure Python App!")
+    response = requests.get("https://httpbin.org/get")
+    print(response.json())
 
-if __name__ == '__main__':
-  fire.Fire(hello)
+if __name__ == "__main__":
+    main()

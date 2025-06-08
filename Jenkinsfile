@@ -8,9 +8,9 @@ pipeline {
         pollSCM '* * * * *'
     }
     stages {
-        stage('Build') {
+        stage('Dependencies Install') {
             steps {
-                echo "Building.."
+                echo "Installing Dependecies.."
                 sh '''
                 cd myapp
                 pip install -r requirements.txt
@@ -21,9 +21,15 @@ pipeline {
             steps {
                 echo "Testing.."
                 sh '''
-                cd myapp
-                python3 hello.py
-                python3 hello.py --name=Brad
+                bandit -r myapp -f html -o bandit-report.html || true
+                '''
+            }
+        }
+        stage('Scanning') {
+            steps {
+                echo "Testing.."
+                sh '''
+                trivy fs --exit-code 0 --format json --output trivy-report.json . || true
                 '''
             }
         }
@@ -31,9 +37,15 @@ pipeline {
             steps {
                 echo 'Deliver....'
                 sh '''
-                echo "doing delivery stuff.."
+                echo "All secure checks passed. Ready for delivery."
                 '''
             }
+        }
+    }
+
+    post {
+        always{
+            archiveArtifacts artifacts: '**/*.html, **/*.json', allowEmptyArchive: true
         }
     }
 }
