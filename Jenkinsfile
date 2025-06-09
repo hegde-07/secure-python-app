@@ -4,9 +4,6 @@ pipeline {
             label 'docker-agent-python'
             }
       }
-    triggers {
-        pollSCM 'H * * * *'
-    }
     stages {
         stage('Dependencies Install') {
             steps {
