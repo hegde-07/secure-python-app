@@ -4,10 +4,13 @@ pipeline {
             label 'docker-agent-python'
             }
       }
+    triggers {
+        pollSCM '* * * * *'
+    }
     stages {
-        stage('Dependencies Install') {
+        stage('Build') {
             steps {
-                echo "Installing Dependecies.."
+                echo "Building.."
                 sh '''
                 cd myapp
                 pip install -r requirements.txt
@@ -18,15 +21,9 @@ pipeline {
             steps {
                 echo "Testing.."
                 sh '''
-                bandit -r myapp -f html -o bandit-report.html || true
-                '''
-            }
-        }
-        stage('Scanning') {
-            steps {
-                echo "Testing.."
-                sh '''
-                trivy fs --exit-code 0 --format json --output trivy-report.json . || true
+                cd myapp
+                python3 hello.py
+                python3 hello.py --name=Brad
                 '''
             }
         }
@@ -34,15 +31,9 @@ pipeline {
             steps {
                 echo 'Deliver....'
                 sh '''
-                echo "All secure checks passed. Ready for delivery."
+                echo "doing delivery stuff.."
                 '''
             }
-        }
-    }
-
-    post {
-        always{
-            archiveArtifacts artifacts: '**/*.html, **/*.json', allowEmptyArchive: true
         }
     }
 }
