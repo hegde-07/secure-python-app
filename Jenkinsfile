@@ -2,46 +2,82 @@ pipeline {
     agent { 
         node {
             label 'docker-agent-python'
-            }
-      }
+        }
+    }
+
+    environment {
+        SCAN_REPORT_HTML = 'bandit_report.html'
+        SCAN_REPORT_JSON = 'bandit_output.json'
+        TRIVY_REPORT     = 'trivy_report.json'
+        TF_PLAN_FILE     = 'tfplan'
+    }
+
     stages {
-        stage('Dependencies Install') {
+
+        stage('SCM Checkout') {
             steps {
-                echo "Installing Dependecies.."
+                checkout scm
+            }
+        }
+
+        stage('Terraform Init + Validate + Plan') {
+            steps {
+                echo "Initializing Terraform..."
                 sh '''
-                cd myapp
-                pip install -r requirements.txt
+                    terraform init
+                    terraform validate
+                    terraform plan -out=${TF_PLAN_FILE}
                 '''
             }
         }
-        stage('Test') {
+
+        stage('IaC Security Scan - tfsec') {
             steps {
-                echo "Testing.."
+                echo "Running tfsec for Terraform code..."
                 sh '''
-                bandit -r myapp -f html -o bandit-report.html || true
+                    curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+                    tfsec . || true
                 '''
             }
         }
-        stage('Scanning') {
+
+        stage('App Security Scan - Bandit') {
             steps {
-                echo "Testing.."
+                echo "Running Bandit on Python app..."
                 sh '''
-                trivy fs --exit-code 0 --format json --output trivy-report.json . || true
+                    pip3 install bandit
+                    bandit -r myapp -f json -o ${SCAN_REPORT_JSON}
+                    bandit -r myapp -f html -o ${SCAN_REPORT_HTML}
                 '''
             }
         }
-        stage('Deliver') {
+
+        stage('Trivy Scan - File System') {
             steps {
-                echo 'Deliver....'
+                echo "Running Trivy file system scan..."
                 sh '''
-                echo "All secure checks passed. Ready for delivery."
+                    sudo apt-get update -y
+                    sudo apt-get install -y wget
+                    wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.50.2_Linux-64bit.deb
+                    sudo dpkg -i trivy_0.50.2_Linux-64bit.deb
+                    trivy fs . --format json --output ${TRIVY_REPORT} || true
+                '''
+            }
+        }
+
+        stage('Terraform Apply (Deploy EC2)') {
+            steps {
+                echo "Applying Terraform to deploy infrastructure..."
+                sh '''
+                    terraform apply -auto-approve ${TF_PLAN_FILE}
                 '''
             }
         }
     }
 
     post {
-        always{
+        always {
+            echo "Archiving security scan results..."
             archiveArtifacts artifacts: '**/*.html, **/*.json', allowEmptyArchive: true
         }
     }
