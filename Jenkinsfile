@@ -1,10 +1,7 @@
 pipeline {
-    agent { 
-       docker {
-         image 'secure-agent'
-         args '-u root -v /var/run/docker.sock:/var/run/docker.sock'
-     }
-    }
+  agent {
+    label 'docker-enabled-agent'
+  }
 
     environment {
     TF_PLAN_AWS   = 'aws.tfplan'
