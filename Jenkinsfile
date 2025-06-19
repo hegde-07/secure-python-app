@@ -1,50 +1,110 @@
 pipeline {
     agent { 
-        node {
-            label 'docker-agent-python'
-            }
-      }
+       docker {
+         image 'secure-agent'
+         args '-u root -v /var/run/docker.sock:/var/run/docker.sock'
+     }
+    }
+
+    environment {
+    TF_PLAN_AWS   = 'aws.tfplan'
+    TF_PLAN_OCI   = 'oci.tfplan'
+    BANDIT_JSON   = 'bandit_output.json'
+    BANDIT_HTML   = 'bandit_report.html'
+    TRIVY_REPORT  = 'trivy_report.json'
+    GREETING_NAME = 'Brad'
+  }
+
+    triggers {
+        pollSCM('H/5 * * * *')
+    }
     stages {
-        stage('Dependencies Install') {
+        stage('Build') {
             steps {
-                echo "Installing Dependecies.."
+                echo "Building.."
                 sh '''
-                    curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
-                    tfsec . || true
+                cd myapp
+                pip install -r requirements.txt
                 '''
             }
         }
 
-        stage('App Security Scan - Bandit') {
-            steps {
-                echo "Running Bandit on Python app..."
-                sh '''
-                bandit -r myapp -f html -o bandit-report.html || true
-                '''
+        stage('Terraform Init + Plan (AWS)') {
+         steps {
+         dir('terraform/aws') {
+              sh '''
+                 terraform init
+                 terraform plan -out=${TF_PLAN_AWS}
+               '''
+                }
             }
         }
-        stage('Scanning') {
+
+        stage('Terraform Init + Plan (Oracle Cloud)') {
+         steps {
+            dir('terraform/oci') {
+            sh '''
+                terraform init
+                terraform plan -out=${TF_PLAN_OCI}
+            '''
+             }
+          }
+        }   
+
+        stage('Test') {
             steps {
                 echo "Testing.."
                 sh '''
-                trivy fs --exit-code 0 --format json --output trivy-report.json . || true
+                cd myapp
+                python3 hello.py
+                python3 hello.py --name=Brad
                 '''
             }
         }
 
-        stage('Terraform Apply (Deploy EC2)') {
+        stage('Security Scan - tfsec') {
+        steps {
+         sh '''
+           tfsec terraform/aws || true
+           tfsec terraform/oci || true
+         '''
+         }
+       }
+
+      stage('Security Scan - Bandit') {
+         steps {
+         sh '''
+           bandit -r myapp -f json -o ${BANDIT_JSON}
+           bandit -r myapp -f html -o ${BANDIT_HTML}
+         '''
+         }
+       }
+       
+        stage('Security Scan - Trivy') {
+         steps {
+          sh '''
+           trivy fs . --format json --output ${TRIVY_REPORT} || true
+         '''
+          }
+        }
+
+        stage('Terraform Apply (AWS + Oracle)') {
+        steps {
+          dir('terraform/aws') {
+           sh 'terraform apply -auto-approve ${TF_PLAN_AWS}'
+         }
+         dir('terraform/oci') {
+              sh 'terraform apply -auto-approve ${TF_PLAN_OCI}'
+            }
+        }
+       }
+        stage('Deliver') {
             steps {
-                echo "Applying Terraform to deploy infrastructure..."
+                echo 'Deliver....'
                 sh '''
-                echo "All secure checks passed. Ready for delivery."
+                echo "doing delivery stuff.."
                 '''
             }
-        }
-    }
-
-    post {
-        always{
-            archiveArtifacts artifacts: '**/*.html, **/*.json', allowEmptyArchive: true
         }
     }
 }

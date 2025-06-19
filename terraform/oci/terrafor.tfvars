@@ -1,0 +1,8 @@
+tenancy_ocid ="ocid1.tenancy.oc1..aaaaaaaasy2m5f3y47k5jvry4yo4awobh3td7cazu57mirmokwnl745t42tq"
+user_ocid = "ocid1.user.oc1..aaaaaaaaaeudahwxivoqqrrzkjtnntl23nogyae7a2fwcnf7ismzvuxgsnpq"
+fingerprint = "0f:ab:e2:11:f5:3e:3f:05:ba:9c:8b:71:74:2f:a9:01"
+private_key_path="C:\Windows\keys\oci_keys\hegde.chidghan23@gmail.com-2025-06-19T07_39_47.773Z.pem"
+region = "eu-frankfurt-1"
+availability_domain ="ckGb:EU-FRANKFURT-1-AD-1"
+image_ocid = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaao6kzckc2zqldxqxwv3dwi3u3z5olmyitp5zy4vq7gnl5zbnbjjgq"
+compartment_ocid ="ocid1.tenancy.oc1..aaaaaaaasy2m5f3y47k5jvry4yo4awobh3td7cazu57mirmokwnl745t42tq"

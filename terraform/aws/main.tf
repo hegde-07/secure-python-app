@@ -61,6 +61,6 @@ resource "aws_instance" "web" {
   user_data = file("setup.sh")
 
   tags = {
-    name = "WebSever-${count.index+1}"
+    name = "AWS-Web"
   }
   }
