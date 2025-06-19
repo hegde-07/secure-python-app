@@ -1,7 +1,7 @@
 pipeline {
-  agent {
-    agent any
-  }
+    agent {
+        label 'docker-enabled-agent'
+    }
 
     environment {
     TF_PLAN_AWS   = 'aws.tfplan'
