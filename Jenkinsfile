@@ -79,7 +79,7 @@ pipeline {
          '''
          }
        }
-       
+
         stage('Security Scan - Trivy') {
          steps {
           sh '''
