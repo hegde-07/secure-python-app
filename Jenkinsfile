@@ -1,7 +1,11 @@
 pipeline {
     agent {
-        label 'docker-enabled-agent'
-    }
+     docker {
+     image 'custom-jenkins-agent'
+     args '-u root -v /var/run/docker.sock:/var/run/docker.sock'
+  }
+}
+
 
     environment {
     TF_PLAN_AWS   = 'aws.tfplan'
@@ -18,7 +22,12 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                echo "Building.."
+                sh '''
+                 cd myapp
+                 python3 -m venv venv
+                 . venv/bin/activate
+                 pip install -r requirements.txt
+               '''
             }
         }
 
