@@ -1,0 +1,56 @@
+# Use minimal Python 3.11 base
+FROM python:3.11-slim
+
+# Run as root to install system packages
+USER root
+
+# Install required tools and dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    unzip \
+    gnupg \
+    git \
+    lsb-release \
+    sudo \
+    docker.io \
+    python3-venv \
+    python3-full \
+    apt-transport-https \
+    ca-certificates \
+    software-properties-common && \
+    rm -rf /var/lib/apt/lists/*
+
+ 
+# Install Terraform (v1.7.5)
+ 
+RUN wget https://releases.hashicorp.com/terraform/1.7.5/terraform_1.7.5_linux_amd64.zip && \
+    unzip terraform_1.7.5_linux_amd64.zip && \
+    mv terraform /usr/local/bin/ && \
+    rm terraform_1.7.5_linux_amd64.zip
+
+
+# Install tfsec (IaC Scanner)
+ 
+RUN curl -sSL https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+
+
+# Install Bandit (Python SAST)
+ 
+RUN pip3 install --break-system-packages --upgrade pip && \
+    pip3 install --break-system-packages bandit
+
+
+# Install Trivy (Vulnerability Scanner)
+ 
+RUN curl -fsSL https://aquasecurity.github.io/trivy-repo/deb/public.key | \
+    gpg --dearmor -o /usr/share/keyrings/trivy.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" \
+    > /etc/apt/sources.list.d/trivy.list && \
+    apt-get update && apt-get install -y trivy && \
+    rm -rf /var/lib/apt/lists/*
+
+
+# Set up default command (keep container running idle)
+ 
+CMD ["cat"]
