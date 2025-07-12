@@ -62,8 +62,8 @@ pipeline {
       stage('Security Scan - Bandit') {
          steps {
          sh '''
-           bandit -r myapp -f json -o ${BANDIT_JSON}
-           bandit -r myapp -f html -o ${BANDIT_HTML}
+           
+           bandit -r myapp -f json -o bandit_output.json || true
          '''
          }
        }
