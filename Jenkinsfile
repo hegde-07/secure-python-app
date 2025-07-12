@@ -15,7 +15,7 @@ pipeline {
             steps {
                 sh '''
                  cd myapp
-                 python3 -m pip install --user -r requirements.txt
+                 pipx runpip python-package install -r requirements.txt
                '''
             }
         }
