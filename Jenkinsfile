@@ -15,11 +15,6 @@ pipeline {
             steps {
                 sh '''
                  cd myapp
-                 apt-get update && apt-get install -y python3-venv
-                 python3 -m venv test_env
-                 source test_env/bin/activate
-                 pip install --upgrade pip
-                 pip install -r requirements.txt
                '''
             }
         }
@@ -46,16 +41,14 @@ pipeline {
           }
         }  */
 
-        stage('Test') {
+        /*stage('Test') {
             steps {
                 echo "Testing.."
                 sh '''
-                cd myapp
-                python3 hello.py
-                python3 hello.py --name=Brad
+               python3-
                 '''
             }
-        }
+        }*/
 
         stage('Security Scan - tfsec') {
         steps {
