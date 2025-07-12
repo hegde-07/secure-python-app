@@ -11,10 +11,11 @@ pipeline {
   }
 
     stages {
-        stage('Build') {
+        stage('Installation Dependencies') {
             steps {
                 sh '''
                  cd myapp
+                 python3 -m pip install --user -r requirements.txt
                '''
             }
         }
