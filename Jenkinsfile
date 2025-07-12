@@ -88,10 +88,7 @@ pipeline {
        }*/
         stage('Deliver') {
             steps {
-                echo 'Deliver....'
-                sh '''
-                echo "Deployed
-                '''
+                echo 'Deployed....'
             }
         }
     }
