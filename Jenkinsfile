@@ -1,11 +1,5 @@
 pipeline {
-    agent {
-     docker {
-     image 'custom-jenkins-agent'
-     args '-u root -v /var/run/docker.sock:/var/run/docker.sock'
-  }
-}
-
+    agent any
 
     environment {
     TF_PLAN_AWS   = 'aws.tfplan'
@@ -16,9 +10,6 @@ pipeline {
     GREETING_NAME = 'Brad'
   }
 
-    triggers {
-        pollSCM('H/5 * * * *')
-    }
     stages {
         stage('Build') {
             steps {
@@ -31,7 +22,7 @@ pipeline {
             }
         }
 
-        stage('Terraform Init + Plan (AWS)') {
+       /*age('Terraform Init + Plan (AWS)') {
          steps {
          dir('terraform/aws') {
               sh '''
@@ -51,7 +42,7 @@ pipeline {
             '''
              }
           }
-        }   
+        }  */
 
         stage('Test') {
             steps {
@@ -90,7 +81,7 @@ pipeline {
           }
         }
 
-        stage('Terraform Apply (AWS + Oracle)') {
+       /*tage('Terraform Apply (AWS + Oracle)') {
         steps {
           dir('terraform/aws') {
            sh 'terraform apply -auto-approve ${TF_PLAN_AWS}'
@@ -99,12 +90,12 @@ pipeline {
               sh 'terraform apply -auto-approve ${TF_PLAN_OCI}'
             }
         }
-       }
+       }*/
         stage('Deliver') {
             steps {
                 echo 'Deliver....'
                 sh '''
-                echo "doing delivery stuff.."
+                echo "Deployed
                 '''
             }
         }
