@@ -15,6 +15,7 @@ pipeline {
             steps {
                 sh '''
                  cd myapp
+                 apt-get update && apt-get install -y python3-venv
                  python3 -m venv test_env
                  source test_env/bin/activate
                  pip install --upgrade pip
