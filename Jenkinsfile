@@ -19,7 +19,7 @@ pipeline {
             }
         }
 
-       /*age('Terraform Init + Plan (AWS)') {
+       stage('Terraform Init + Plan (AWS)') {
          steps {
          dir('terraform/aws') {
               sh '''
@@ -39,7 +39,7 @@ pipeline {
             '''
              }
           }
-        }  */
+        }  
 
         /*stage('Test') {
             steps {
@@ -76,7 +76,7 @@ pipeline {
           }
         }
 
-       /*tage('Terraform Apply (AWS + Oracle)') {
+       stage('Terraform Apply (AWS + Oracle)') {
         steps {
           dir('terraform/aws') {
            sh 'terraform apply -auto-approve ${TF_PLAN_AWS}'
@@ -85,7 +85,7 @@ pipeline {
               sh 'terraform apply -auto-approve ${TF_PLAN_OCI}'
             }
         }
-       }*/
+       }
         stage('Deliver') {
             steps {
                 echo 'Deployed....'
