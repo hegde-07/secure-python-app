@@ -15,7 +15,9 @@ pipeline {
             steps {
                 sh '''
                  cd myapp
-                 pipx runpip python-package install -r requirements.txt
+                 python3 -m venv test_env
+                 source test_env/bin/activate
+                 pip install -r requirements.txt
                '''
             }
         }
