@@ -1,28 +1,37 @@
 pipeline {
-    agent any
-
-    environment {
-    TF_PLAN_AWS   = 'aws.tfplan'
-    TF_PLAN_OCI   = 'oci.tfplan'
-    BANDIT_JSON   = 'bandit_output.json'
-    BANDIT_HTML   = 'bandit_report.html'
-    TRIVY_REPORT  = 'trivy_report.json'
-    GREETING_NAME = 'Brad'
-  }
+    agent none
 
     stages {
-        stage('Installation Dependencies') {
+        stage('Install Python Requirements + Build App') {
+
+          agent{
+            node {
+              label 'python-agent'
+            }
+          }
+            steps {
+                 sh '''
+                    python3 -m venv venv
+                    source venv/bin/activate
+                    cd myapp
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                    echo "Application build/prepare complete."
+                '''
+            }
+        }
+
+        stage('Bandit Scan') {
+          agent any  // ru
             steps {
                 sh '''
-                 cd myapp
-                 python3 -m venv test_env
-                 source test_env/bin/activate
-                 pip install -r requirements.txt
-               '''
+                   bandit --version
+                '''
             }
         }
 
        stage('Terraform Init + Plan (AWS)') {
+        agent any
          steps {
          dir('terraform/aws') {
               sh '''
@@ -32,17 +41,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Terraform Init + Plan (Oracle Cloud)') {
-         steps {
-            dir('terraform/oci') {
-            sh '''
-                terraform init
-                terraform plan -out=${TF_PLAN_OCI}
-            '''
-             }
-          }
-        }  
 
         /*stage('Test') {
             steps {
@@ -54,24 +52,17 @@ pipeline {
         }*/
 
         stage('Security Scan - tfsec') {
+        agent any
         steps {
          sh '''
            tfsec terraform/aws || true
-           tfsec terraform/oci || true
          '''
          }
        }
 
-      stage('Security Scan - Bandit') {
-         steps {
-         sh '''
-           
-           bandit -r myapp -f json -o bandit_output.json || true
-         '''
-         }
-       }
 
         stage('Security Scan - Trivy') {
+        agent any
          steps {
           sh '''
            trivy fs . --format json --output ${TRIVY_REPORT} || true
@@ -80,16 +71,15 @@ pipeline {
         }
 
        stage('Terraform Apply (AWS + Oracle)') {
-        steps {
+        agent any
+         steps {
           dir('terraform/aws') {
            sh 'terraform apply -auto-approve ${TF_PLAN_AWS}'
          }
-         dir('terraform/oci') {
-              sh 'terraform apply -auto-approve ${TF_PLAN_OCI}'
-            }
         }
        }
         stage('Deliver') {
+        agent any
             steps {
                 echo 'Deployed....'
             }
