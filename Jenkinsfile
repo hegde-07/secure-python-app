@@ -1,13 +1,8 @@
 pipeline {
-    agent none
+    agent { label 'python-docker' }
 
     stages {
         stage('Install Python Requirements + Build App') {
-
-          agent{
-            node {
-              label 'python-docker'
-            }
           }
             steps {
                  sh '''
@@ -19,7 +14,6 @@ pipeline {
         }
 
         stage('Bandit Scan') {
-          agent any  // ru
             steps {
                 sh '''
                    bandit --version
@@ -28,7 +22,6 @@ pipeline {
         }
 
        stage('Terraform Init + Plan (AWS)') {
-        agent any
          steps {
          dir('terraform/aws') {
               sh '''
@@ -49,7 +42,6 @@ pipeline {
         }*/
 
         stage('Security Scan - tfsec') {
-        agent any
         steps {
          sh '''
            tfsec terraform/aws || true
@@ -59,7 +51,6 @@ pipeline {
 
 
         stage('Security Scan - Trivy') {
-        agent any
          steps {
           sh '''
            trivy fs . --format json --output ${TRIVY_REPORT} || true
@@ -68,7 +59,6 @@ pipeline {
         }
 
        stage('Terraform Apply (AWS)') {
-        agent any
          steps {
           dir('terraform/aws') {
            sh 'terraform apply -auto-approve ${TF_PLAN_AWS}'
@@ -76,7 +66,6 @@ pipeline {
         }
        }
         stage('Deliver') {
-        agent any
             steps {
                 echo 'Deployed....'
             }
