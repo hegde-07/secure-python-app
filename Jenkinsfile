@@ -12,10 +12,7 @@ pipeline {
             steps {
                  sh '''
                     python3 -m venv venv
-                    source venv/bin/activate
                     cd myapp
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
                     echo "Application build/prepare complete."
                 '''
             }
@@ -70,7 +67,7 @@ pipeline {
           }
         }
 
-       stage('Terraform Apply (AWS + Oracle)') {
+       stage('Terraform Apply (AWS)') {
         agent any
          steps {
           dir('terraform/aws') {
