@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'python-docker' }
+    agent any
 
     stages {
         stage('Install Python Requirements + Build App') {
@@ -71,4 +71,3 @@ pipeline {
             }
         }
     }
-}
