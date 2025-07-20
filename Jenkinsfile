@@ -6,7 +6,7 @@ pipeline {
 
           agent{
             node {
-              label 'python-agent'
+              label 'python-docker'
             }
           }
             steps {
