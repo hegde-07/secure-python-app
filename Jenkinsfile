@@ -3,9 +3,8 @@ pipeline {
 
     stages {
         stage('Install Python Requirements + Build App') {
-          }
             steps {
-                 sh '''
+                sh '''
                     python3 -m venv venv
                     cd myapp
                     echo "Application build/prepare complete."
@@ -16,18 +15,18 @@ pipeline {
         stage('Bandit Scan') {
             steps {
                 sh '''
-                   bandit --version
+                    bandit --version
                 '''
             }
         }
 
-       stage('Terraform Init + Plan (AWS)') {
-         steps {
-         dir('terraform/aws') {
-              sh '''
-                 terraform init
-                 terraform plan -out=${TF_PLAN_AWS}
-               '''
+        stage('Terraform Init + Plan (AWS)') {
+            steps {
+                dir('terraform/aws') {
+                    sh '''
+                        terraform init
+                        terraform plan -out="${TF_PLAN_AWS}"
+                    '''
                 }
             }
         }
@@ -36,38 +35,41 @@ pipeline {
             steps {
                 echo "Testing.."
                 sh '''
-               python3-
+                    python3 -
                 '''
             }
         }*/
 
         stage('Security Scan - tfsec') {
-        steps {
-         sh '''
-           tfsec terraform/aws || true
-         '''
-         }
-       }
-
+            steps {
+                sh '''
+                    tfsec terraform/aws || true
+                '''
+            }
+        }
 
         stage('Security Scan - Trivy') {
-         steps {
-          sh '''
-           trivy fs . --format json --output ${TRIVY_REPORT} || true
-         '''
-          }
+            steps {
+                sh '''
+                    trivy fs . --format json --output "${TRIVY_REPORT}" || true
+                '''
+            }
         }
 
-       stage('Terraform Apply (AWS)') {
-         steps {
-          dir('terraform/aws') {
-           sh 'terraform apply -auto-approve ${TF_PLAN_AWS}'
-         }
+        stage('Terraform Apply (AWS)') {
+            steps {
+                dir('terraform/aws') {
+                    sh '''
+                        terraform apply -auto-approve "${TF_PLAN_AWS}"
+                    '''
+                }
+            }
         }
-       }
+
         stage('Deliver') {
             steps {
                 echo 'Deployed....'
             }
         }
     }
+}
