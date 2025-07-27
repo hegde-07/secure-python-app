@@ -1,6 +1,12 @@
 pipeline {
     agent any
 
+    environment {
+        AWS_ACCESS_KEY_ID = credentials('AWS_CREDENTIALS_USR')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_CREDENTIALS_PSW')
+        AWS_DEFAULT_REGION = 'eu-central-1'
+    }
+
     stages {
         stage('Install Python Requirements + Build App') {
             steps {
