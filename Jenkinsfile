@@ -2,12 +2,21 @@ pipeline {
     agent any
 
     environment {
-        AWS_ACCESS_KEY_ID = credentials('AWS_CREDENTIALS_USR')
-        AWS_SECRET_ACCESS_KEY = credentials('AWS_CREDENTIALS_PSW')
-        AWS_DEFAULT_REGION = 'eu-central-1'
+        TF_PLAN_AWS = "tfplan.out"
+        TRIVY_REPORT = "trivy-report.json"
     }
 
     stages {
+        stage('Set AWS Credentials') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'AWS_CREDENTIALS',
+                                                 usernameVariable: 'AWS_ACCESS_KEY_ID',
+                                                 passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    echo "AWS credentials loaded securely"
+                }
+            }
+        }
+
         stage('Install Python Requirements + Build App') {
             steps {
                 sh '''
@@ -20,54 +29,51 @@ pipeline {
 
         stage('Bandit Scan') {
             steps {
-                sh '''
-                    bandit --version
-                '''
+                sh 'bandit --version'
             }
         }
 
         stage('Terraform Init + Plan (AWS)') {
             steps {
                 dir('terraform/aws') {
-                    sh '''
-                        terraform init
-                        terraform plan -out="${TF_PLAN_AWS}"
-                    '''
+                    withCredentials([usernamePassword(credentialsId: 'AWS_CREDENTIALS',
+                                                     usernameVariable: 'AWS_ACCESS_KEY_ID',
+                                                     passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh '''
+                            export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+                            export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                            terraform init
+                            terraform plan -out=${TF_PLAN_AWS}
+                        '''
+                    }
                 }
             }
         }
 
-        /*stage('Test') {
-            steps {
-                echo "Testing.."
-                sh '''
-                    python3 -
-                '''
-            }
-        }*/
-
         stage('Security Scan - tfsec') {
             steps {
-                sh '''
-                    tfsec terraform/aws || true
-                '''
+                sh 'tfsec terraform/aws || true'
             }
         }
 
         stage('Security Scan - Trivy') {
             steps {
-                sh '''
-                    trivy fs . --format json --output "${TRIVY_REPORT}" || true
-                '''
+                sh 'trivy fs . --format json --output ${TRIVY_REPORT} || true'
             }
         }
 
         stage('Terraform Apply (AWS)') {
             steps {
                 dir('terraform/aws') {
-                    sh '''
-                        terraform apply -auto-approve "${TF_PLAN_AWS}"
-                    '''
+                    withCredentials([usernamePassword(credentialsId: 'AWS_CREDENTIALS',
+                                                     usernameVariable: 'AWS_ACCESS_KEY_ID',
+                                                     passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh '''
+                            export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+                            export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                            terraform apply -auto-approve ${TF_PLAN_AWS}
+                        '''
+                    }
                 }
             }
         }
